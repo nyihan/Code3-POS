@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartPOS</title>
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#007aff" />
+<link rel="icon" href="icons/icon-192.png" />
+
+<!-- Basic style placeholder; real styles in Part 2 -->
+<style>
+/* ========== SMARTPOS – Loyverse-Style Theme ========== */
+:root {
+  --accent: #007aff;
+  --accent-dark: #0056b3;
+  --bg: #f5f6fa;
+  --white: #fff;
+  --gray: #ddd;
+  --text: #333;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+/* Header */
+.pos-header {
+  background: var(--accent);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  font-size: 1.25rem;
+}
+.pos-header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+.pos-header button {
+  background: none;
+  border: none;
+  color: var(--white);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+/* Tabs */
+.pos-tabs {
+  display: flex;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray);
+}
+.pos-tabs button {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+.pos-tabs button.active {
+  border-bottom: 3px solid var(--accent);
+  color: var(--accent);
+  font-weight: bold;
+}
+
+/* Main container */
+#tab-content {
+  padding: 1rem;
+}
+
+/* Sales screen */
+.sales-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+.item-card {
+  background: var(--white);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.item-card:hover { transform: scale(1.03); }
+.item-card img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px 6px 0 0;
+}
+.item-card .info {
+  padding: 0.5rem;
+  text-align: center;
+}
+.item-card .name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.item-card .price {
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+/* Ticket / Checkout panel */
+.ticket-panel {
+  background: var(--white);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.ticket-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.ticket-item span {
+  flex: 1;
+}
+.ticket-summary {
+  border-top: 1px solid var(--gray);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+}
+.checkout-btn {
+  display: block;
+  width: 100%;
+  background: var(--accent);
+  color: var(--white);
+  border: none;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+.checkout-btn:hover { background: var(--accent-dark); }
+
+/* Tables for admin screens */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th, .table td {
+  border: 1px solid var(--gray);
+  padding: 0.5rem;
+  text-align: left;
+}
+.table th {
+  background: var(--accent);
+  color: var(--white);
+}
+
+/* Buttons / forms */
+.btn {
+  background: var(--accent);
+  color: var(--white);
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.btn:hover { background: var(--accent-dark); }
+input, select {
+  width: 100%;
+  padding: 0.5rem;
+  margin: 0.3rem 0;
+  border: 1px solid var(--gray);
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+/* Modals */
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal.active { display: flex; }
+.modal-content {
+  background: var(--white);
+  padding: 1rem;
+  border-radius: 6px;
+  width: 90%;
+  max-width: 400px;
+}
+
+/* Reports */
+.chart-container {
+  background: var(--white);
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Responsive tweaks */
+@media (min-width: 768px) {
+  .sales-grid { grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); }
+  .item-card img { height: 100px; }
+}
+</style>
+
+</head>
+<body>
+<div class="loader">
+  <h2>SmartPOS Loading...</h2>
+</div>
+
+<!-- ===== APP CONTAINER ===== -->
+<div id="app" style="display:none">
+  <header class="pos-header">
+    <h1>SmartPOS</h1>
+    <button id="btn-settings">⚙️</button>
+  </header>
+
+  <nav class="pos-tabs">
+    <button data-tab="sales" class="active">Sales</button>
+    <button data-tab="items">Items</button>
+    <button data-tab="categories">Categories</button>
+    <button data-tab="receipts">Receipts</button>
+    <button data-tab="reports">Reports</button>
+  </nav>
+
+  <main id="tab-content">
+    <!-- dynamic screens will be injected here by JS -->
+  </main>
+</div>
+
+<!-- PWA install / service worker -->
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(console.error);
+  });
+}
+</script>
+
+<!-- External JS will be injected next (Part 3) -->
+<script id="smartpos-js"></script>
+<script>
+/* ========== SMARTPOS CORE SCRIPT ========== */
+
+// === CONFIG ===
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxOVeoQXw18YLYbsK-6gqrIsPs3uqiZO-wQ8llEt7XL4tdgKB7DLJq_lotimJ8YnzY/exec";
+let appData = {
+  items: [],
+  categories: [],
+  receipts: [],
+  settings: { adminPassword: "", tax: 0, discount: 0 }
+};
+
+// === INIT ===
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelector(".loader").style.display = "none";
+  document.querySelector("#app").style.display = "block";
+  initTabs();
+  loadLocalData();
+  renderSales();
+  syncFromSheet();
+});
+
+// === TAB NAVIGATION ===
+function initTabs(){
+  const tabs = document.querySelectorAll(".pos-tabs button");
+  tabs.forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      tabs.forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      const tab=btn.dataset.tab;
+      if(tab==="sales")renderSales();
+      if(tab==="items")renderItems();
+      if(tab==="categories")renderCategories();
+      if(tab==="receipts")renderReceipts();
+      if(tab==="reports")renderReports();
+    });
+  });
+  document.querySelector("#btn-settings").onclick=openSettings;
+}
+
+// === LOCAL STORAGE HELPERS ===
+function saveLocalData(){
+  localStorage.setItem("smartpos-data", JSON.stringify(appData));
+}
+function loadLocalData(){
+  const raw = localStorage.getItem("smartpos-data");
+  if(raw) appData = JSON.parse(raw);
+}
+
+// === GOOGLE SHEET SYNC ===
+async function syncFromSheet(){
+  try{
+    const res = await fetch(SHEET_URL+"?mode=read");
+    const data = await res.json();
+    if(data.items) appData.items = data.items;
+    if(data.categories) appData.categories = data.categories;
+    if(data.receipts) appData.receipts = data.receipts;
+    saveLocalData();
+  }catch(e){console.warn("Offline or fetch failed",e);}
+}
+async function syncToSheet(){
+  try{
+    await fetch(SHEET_URL+"?mode=write",{
+      method:"POST",
+      body:JSON.stringify(appData),
+      headers:{"Content-Type":"application/json"}
+    });
+  }catch(e){console.warn("Sync fail",e);}
+}
+
+// === SALES SCREEN ===
+let currentTicket=[];
+function renderSales(){
+  const main=document.querySelector("#tab-content");
+  let html=`<div class="sales-grid">`;
+  appData.items.forEach(it=>{
+    html+=`<div class="item-card" onclick="addToTicket('${it.id}')">
+      <img src="${it.image||''}" alt="">
+      <div class="info"><div class="name">${it.name}</div>
+      <div class="price">$${it.price}</div></div></div>`;
+  });
+  html+=`</div>`;
+  html+=`<div class="ticket-panel" id="ticketPanel"></div>`;
+  main.innerHTML=html;
+  renderTicket();
+}
+function addToTicket(id){
+  const item=appData.items.find(i=>i.id==id);
+  if(!item)return;
+  const existing=currentTicket.find(t=>t.id==id);
+  if(existing) existing.qty++;
+  else currentTicket.push({...item,qty:1});
+  renderTicket();
+}
+function renderTicket(){
+  const panel=document.querySelector("#ticketPanel");
+  if(!panel)return;
+  let html="";
+  let total=0;
+  currentTicket.forEach(t=>{
+    const line=t.price*t.qty;
+    total+=line;
+    html+=`<div class="ticket-item">
+      <span>${t.name} x${t.qty}</span>
+      <span>$${line.toFixed(2)}</span>
+    </div>`;
+  });
+  const tax=(appData.settings.tax||0)/100*total;
+  const disc=(appData.settings.discount||0)/100*total;
+  const grand=total+tax-disc;
+  html+=`<div class="ticket-summary"><span>Total</span><span>$${grand.toFixed(2)}</span></div>
+  <button class="checkout-btn" onclick="checkout()">Charge</button>`;
+  panel.innerHTML=html;
+}
+function checkout(){
+  if(currentTicket.length==0)return;
+  const receipt={
+    id:Date.now(),
+    items:currentTicket,
+    total:currentTicket.reduce((s,i)=>s+i.price*i.qty,0),
+    date:new Date().toISOString()
+  };
+  appData.receipts.push(receipt);
+  saveLocalData();
+  syncToSheet();
+  alert("Payment complete!");
+  currentTicket=[];
+  renderTicket();
+}
+
+// === ITEMS SCREEN ===
+function renderItems(){
+  const main=document.querySelector("#tab-content");
+  let html=`<h2>Items</h2>
+  <button class="btn" onclick="openItemModal()">+ Add Item</button>
+  <table class="table"><thead><tr><th>Name</th><th>Price</th><th>Cat</th><th></th></tr></thead><tbody>`;
+  appData.items.forEach(i=>{
+    html+=`<tr><td>${i.name}</td><td>${i.price}</td><td>${i.category||''}</td>
+    <td><button class="btn" onclick="editItem('${i.id}')">Edit</button></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  main.innerHTML=html;
+}
+function openItemModal(item){
+  const m=document.createElement("div");
+  m.className="modal active";
+  const catOptions=appData.categories.map(c=>`<option>${c.name}</option>`).join("");
+  m.innerHTML=`<div class="modal-content">
+  <h3>${item?"Edit":"Add"} Item</h3>
+  <input id="itName" placeholder="Name" value="${item?.name||""}">
+  <input id="itPrice" type="number" placeholder="Price" value="${item?.price||""}">
+  <select id="itCat">${catOptions}</select>
+  <button class="btn" onclick="saveItem(${item?item.id:"null"})">Save</button>
+  <button class="btn" onclick="this.closest('.modal').remove()">Cancel</button>
+  </div>`;
+  document.body.appendChild(m);
+}
+function saveItem(id){
+  const name=document.querySelector("#itName").value;
+  const price=parseFloat(document.querySelector("#itPrice").value)||0;
+  const cat=document.querySelector("#itCat").value;
+  if(id){
+    const it=appData.items.find(i=>i.id==id);
+    it.name=name;it.price=price;it.category=cat;
+  }else{
+    appData.items.push({id:Date.now(),name,price,category:cat});
+  }
+  saveLocalData();syncToSheet();
+  document.querySelector(".modal").remove();
+  renderItems();
+}
+
+// === CATEGORY SCREEN ===
+function renderCategories(){
+  const main=document.querySelector("#tab-content");
+  let html=`<h2>Categories</h2><button class="btn" onclick="openCatModal()">+ Add Category</button>
+  <table class="table"><tr><th>Name</th><th>Color</th></tr>`;
+  appData.categories.forEach(c=>{
+    html+=`<tr><td>${c.name}</td><td><div style="width:20px;height:20px;background:${c.color};border-radius:4px"></div></td></tr>`;
+  });
+  html+=`</table>`;
+  main.innerHTML=html;
+}
+function openCatModal(){
+  const m=document.createElement("div");
+  m.className="modal active";
+  m.innerHTML=`<div class="modal-content">
+  <h3>Add Category</h3>
+  <input id="catName" placeholder="Name">
+  <input id="catColor" type="color" value="#007aff">
+  <button class="btn" onclick="saveCat()">Save</button>
+  <button class="btn" onclick="this.closest('.modal').remove()">Cancel</button>
+  </div>`;
+  document.body.appendChild(m);
+}
+function saveCat(){
+  const name=document.querySelector("#catName").value;
+  const color=document.querySelector("#catColor").value;
+  appData.categories.push({id:Date.now(),name,color});
+  saveLocalData();syncToSheet();
+  document.querySelector(".modal").remove();
+  renderCategories();
+}
+
+// === RECEIPTS SCREEN ===
+function renderReceipts(){
+  const main=document.querySelector("#tab-content");
+  let html="<h2>Receipts</h2><table class='table'><tr><th>Date</th><th>Total</th></tr>";
+  appData.receipts.forEach(r=>{
+    html+=`<tr><td>${new Date(r.date).toLocaleString()}</td><td>$${r.total.toFixed(2)}</td></tr>`;
+  });
+  html+="</table>";
+  main.innerHTML=html;
+}
+
+// === REPORTS SCREEN ===
+function renderReports(){
+  const main=document.querySelector("#tab-content");
+  const totalSales=appData.receipts.reduce((s,r)=>s+r.total,0);
+  main.innerHTML=`<div class='chart-container'><h3>Total Sales</h3>
+  <p>$${totalSales.toFixed(2)}</p></div>`;
+}
+
+// === SETTINGS ===
+function openSettings(){
+  const m=document.createElement("div");
+  m.className="modal active";
+  m.innerHTML=`<div class="modal-content">
+  <h3>Settings</h3>
+  <label>Admin Password</label>
+  <input id="setPass" type="password" value="${appData.settings.adminPassword||''}">
+  <label>Tax %</label>
+  <input id="setTax" type="number" value="${appData.settings.tax||0}">
+  <label>Discount %</label>
+  <input id="setDisc" type="number" value="${appData.settings.discount||0}">
+  <button class="btn" onclick="saveSettings()">Save</button>
+  <button class="btn" onclick="this.closest('.modal').remove()">Close</button>
+  </div>`;
+  document.body.appendChild(m);
+}
+function saveSettings(){
+  appData.settings.adminPassword=document.querySelector("#setPass").value;
+  appData.settings.tax=parseFloat(document.querySelector("#setTax").value)||0;
+  appData.settings.discount=parseFloat(document.querySelector("#setDisc").value)||0;
+  saveLocalData();syncToSheet();
+  document.querySelector(".modal").remove();
+  alert("Settings saved!");
+}
+
+</script>
+</body>
+</html>
