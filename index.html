@@ -12,7 +12,7 @@
 
 <!-- Basic style placeholder; real styles in Part 2 -->
 <style>
-/* ========== SMARTPOS – Loyverse-Style Theme ========== */
+/* ========== SMARTPOS – Loyverse Style (List View + Fixed Header) ========== */
 :root {
   --accent: #007aff;
   --accent-dark: #0056b3;
@@ -22,6 +22,7 @@
   --text: #333;
 }
 
+/* App base */
 html, body {
   margin: 0;
   padding: 0;
@@ -31,6 +32,7 @@ html, body {
   color: var(--text);
 }
 
+/* Loader */
 .loader {
   display: flex;
   align-items: center;
@@ -38,20 +40,23 @@ html, body {
   height: 100vh;
 }
 
-/* Header */
+/* Header (SmartPOS bar) */
 .pos-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 55px;
   background: var(--accent);
   color: var(--white);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
-  font-size: 1.25rem;
-}
-.pos-header h1 {
-  margin: 0;
+  padding: 0 1rem;
   font-size: 1.2rem;
+  z-index: 1000;
 }
+.pos-header h1 { margin: 0; font-size: 1.1rem; }
 .pos-header button {
   background: none;
   border: none;
@@ -60,11 +65,16 @@ html, body {
   cursor: pointer;
 }
 
-/* Tabs */
+/* Tabs bar */
 .pos-tabs {
-  display: flex;
+  position: fixed;
+  top: 55px; /* under header */
+  left: 0;
+  right: 0;
   background: var(--white);
   border-bottom: 1px solid var(--gray);
+  display: flex;
+  z-index: 999;
 }
 .pos-tabs button {
   flex: 1;
@@ -81,48 +91,49 @@ html, body {
   font-weight: bold;
 }
 
-/* Main container */
+/* Main content scroll only */
 #tab-content {
+  position: relative;
+  margin-top: 110px; /* header + tabs */
   padding: 1rem;
+  height: calc(100vh - 110px);
+  overflow-y: auto;
+  padding-bottom: 80px; /* safe bottom space */
 }
 
-/* Sales screen */
+/* Item list (no image) */
 .sales-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   background: var(--white);
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  padding: 10px 15px;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: background 0.2s;
 }
-.item-card:hover { transform: scale(1.03); }
-.item-card img {
-  width: 100%;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 6px 6px 0 0;
-}
+.item-card:hover { background: #f2f3f7; }
+.item-card img { display: none; }
 .item-card .info {
-  padding: 0.5rem;
-  text-align: center;
+  flex: 1;
+  text-align: left;
 }
 .item-card .name {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 .item-card .price {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--accent);
 }
 
-/* Ticket / Checkout panel */
+/* Ticket panel */
 .ticket-panel {
   background: var(--white);
   border-radius: 8px;
@@ -134,9 +145,6 @@ html, body {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.5rem;
-}
-.ticket-item span {
-  flex: 1;
 }
 .ticket-summary {
   border-top: 1px solid var(--gray);
@@ -160,22 +168,7 @@ html, body {
 }
 .checkout-btn:hover { background: var(--accent-dark); }
 
-/* Tables for admin screens */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.table th, .table td {
-  border: 1px solid var(--gray);
-  padding: 0.5rem;
-  text-align: left;
-}
-.table th {
-  background: var(--accent);
-  color: var(--white);
-}
-
-/* Buttons / forms */
+/* Buttons & forms */
 .btn {
   background: var(--accent);
   color: var(--white);
@@ -195,7 +188,7 @@ input, select {
   font-size: 0.9rem;
 }
 
-/* Modals */
+/* Modal (settings) */
 .modal {
   position: fixed;
   top: 0; left: 0;
@@ -204,6 +197,7 @@ input, select {
   display: none;
   align-items: center;
   justify-content: center;
+  z-index: 2000;
 }
 .modal.active { display: flex; }
 .modal-content {
@@ -214,7 +208,18 @@ input, select {
   max-width: 400px;
 }
 
-/* Reports */
+/* Table for admin views */
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td {
+  border: 1px solid var(--gray);
+  padding: 0.5rem;
+}
+.table th {
+  background: var(--accent);
+  color: var(--white);
+}
+
+/* Reports section */
 .chart-container {
   background: var(--white);
   border-radius: 6px;
@@ -222,10 +227,10 @@ input, select {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-/* Responsive tweaks */
+/* Responsive */
 @media (min-width: 768px) {
-  .sales-grid { grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); }
-  .item-card img { height: 100px; }
+  .item-card .name { font-size: 1.1rem; }
+  .item-card .price { font-size: 1rem; }
 }
 </style>
 
@@ -234,7 +239,19 @@ input, select {
 <div class="loader">
   <h2>SmartPOS Loading...</h2>
 </div>
-
+<!-- Receipt Detail Modal -->
+<div class="modal" id="receiptModal">
+  <div class="modal-content" style="max-width:500px;">
+    <h3 id="receiptTitle">Receipt Detail</h3>
+    <div id="receiptItems"></div>
+    <div style="border-top:1px solid #ddd;margin-top:10px;padding-top:10px;font-weight:bold;">
+      Total: <span id="receiptTotal"></span>
+    </div>
+    <div style="margin-top:15px;text-align:right;">
+      <button class="btn" onclick="closeReceipt()">Close</button>
+    </div>
+  </div>
+</div>
 <!-- ===== APP CONTAINER ===== -->
 <div id="app" style="display:none">
   <header class="pos-header">
@@ -268,6 +285,160 @@ if ("serviceWorker" in navigator) {
 <script id="smartpos-js"></script>
 <script>
 /* ========== SMARTPOS CORE SCRIPT ========== */
+<script>
+/* === SALES ITEM INTERACTIONS === */
+const ticketContainer = document.querySelector(".ticket-panel");
+
+/* Swipe to delete */
+let startX;
+ticketContainer?.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+ticketContainer?.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX - endX > 80) { // swiped left
+    const item = e.target.closest(".ticket-item");
+    if (item) {
+      const name = item.querySelector(".item-name")?.textContent || "Item";
+      if (confirm(`Delete ${name}?`)) {
+        item.remove();
+        updateTotal();
+      }
+    }
+  }
+});
+
+/* Tap to increase quantity */
+ticketContainer?.addEventListener("click", e => {
+  const item = e.target.closest(".ticket-item");
+  if (item) {
+    const qtyEl = item.querySelector(".qty");
+    let qty = parseInt(qtyEl.textContent) || 1;
+    qty++;
+    qtyEl.textContent = qty;
+    updateTotal();
+  }
+});
+
+/* Update total price dynamically */
+function updateTotal() {
+  let total = 0;
+  document.querySelectorAll(".ticket-item").forEach(row => {
+    const qty = parseInt(row.querySelector(".qty").textContent) || 1;
+    const price = parseFloat(row.querySelector(".price").dataset.value) || 0;
+    total += qty * price;
+  });
+  document.querySelector(".ticket-total").textContent = "Ks " + total.toLocaleString();
+}
+</script>
+<script>
+document.querySelector(".checkout-btn")?.addEventListener("click", () => {
+  const totalText = document.querySelector(".ticket-total")?.textContent || "0";
+  if (confirm(`Confirm charge ${totalText}?`)) {
+    alert("✅ Sale completed successfully!");
+    document.querySelector(".ticket-panel").innerHTML = ""; // clear
+  }
+});
+</script>
+<script>
+document.querySelectorAll(".edit-btn").forEach(btn => {
+  btn.addEventListener("click", e => {
+    const row = e.target.closest("tr");
+    const name = row.children[0].textContent;
+    const price = row.children[1].textContent;
+    const cat = row.children[2].textContent;
+
+    const newName = prompt("Edit name:", name);
+    const newPrice = prompt("Edit price:", price);
+    const newCat = prompt("Edit category:", cat);
+
+    if (newName !== null) row.children[0].textContent = newName;
+    if (newPrice !== null) row.children[1].textContent = newPrice;
+    if (newCat !== null) row.children[2].textContent = newCat;
+  });
+});
+</script>
+<script>
+const catTable = document.querySelector("#categories-table");
+catTable?.addEventListener("click", e => {
+  const cell = e.target.closest("td");
+  if (!cell) return;
+  const cat = cell.textContent.trim();
+  const allItems = document.querySelectorAll(".item-card");
+  allItems.forEach(item => {
+    const itemCat = item.dataset.cat;
+    item.style.display = (cat === "" || itemCat === cat) ? "flex" : "none";
+  });
+});
+</script>
+<script>
+/* === SHOW RECEIPTS LIST === */
+function updateReceiptsTable() {
+  const body = document.getElementById("receiptsBody");
+  if (!body) return;
+  const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+  body.innerHTML = "";
+  receipts.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${r.date}</td><td>Ks ${r.total.toLocaleString()}</td>`;
+    tr.addEventListener("click", () => showReceiptDetail(r));
+    body.appendChild(tr);
+  });
+}
+document.addEventListener("DOMContentLoaded", updateReceiptsTable);
+</script>
+
+/* === RECEIPT SAVE AFTER CHARGE === */
+function saveReceipt() {
+  const items = [];
+  document.querySelectorAll(".ticket-item").forEach(item => {
+    const name = item.querySelector(".item-name").textContent;
+    const qty = parseInt(item.querySelector(".qty").textContent);
+    const price = parseFloat(item.querySelector(".price").dataset.value);
+    items.push({ name, qty, price });
+  });
+
+  const total = items.reduce((t, i) => t + i.qty * i.price, 0);
+  const receipt = {
+    id: Date.now(),
+    date: new Date().toLocaleString(),
+    total,
+    items
+  };
+
+  let receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+  receipts.push(receipt);
+  localStorage.setItem("receipts", JSON.stringify(receipts));
+}
+
+/* Replace your Charge event */
+document.querySelector(".checkout-btn")?.addEventListener("click", () => {
+  const totalText = document.querySelector(".ticket-total")?.textContent || "0";
+  if (confirm(`Confirm charge ${totalText}?`)) {
+    saveReceipt(); // ✅ Save to localStorage
+    alert("✅ Sale completed!");
+    document.querySelector(".ticket-panel").innerHTML = "";
+    updateReceiptsTable(); // Refresh Receipts tab
+  }
+});
+</script><script>
+function showReceiptDetail(r) {
+  document.getElementById("receiptTitle").textContent = `Invoice #${r.id}`;
+  const list = r.items.map(i =>
+    `<div style="display:flex;justify-content:space-between;">
+       <span>${i.name} × ${i.qty}</span>
+       <span>Ks ${(i.price * i.qty).toLocaleString()}</span>
+     </div>`
+  ).join("");
+  document.getElementById("receiptItems").innerHTML = list;
+  document.getElementById("receiptTotal").textContent = "Ks " + r.total.toLocaleString();
+  document.getElementById("receiptModal").classList.add("active");
+}
+
+function closeReceipt() {
+  document.getElementById("receiptModal").classList.remove("active");
+}
+</script>
 
 // === CONFIG ===
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxOVeoQXw18YLYbsK-6gqrIsPs3uqiZO-wQ8llEt7XL4tdgKB7DLJq_lotimJ8YnzY/exec";
@@ -403,7 +574,13 @@ function renderItems(){
   const main=document.querySelector("#tab-content");
   let html=`<h2>Items</h2>
   <button class="btn" onclick="openItemModal()">+ Add Item</button>
-  <table class="table"><thead><tr><th>Name</th><th>Price</th><th>Cat</th><th></th></tr></thead><tbody>`;
+  <table class="table" id="receiptsTable">
+  <thead>
+    <tr><th>Date</th><th>Total</th></tr>
+  </thead>
+  <tbody id="receiptsBody"></tbody>
+</table>
+`;
   appData.items.forEach(i=>{
     html+=`<tr><td>${i.name}</td><td>${i.price}</td><td>${i.category||''}</td>
     <td><button class="btn" onclick="editItem('${i.id}')">Edit</button></td></tr>`;
