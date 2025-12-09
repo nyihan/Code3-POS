@@ -3,16 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SmartPOS</title>
-
-<link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#007aff" />
-<link rel="icon" href="icons/icon-192.png" />
+<title>SmartPOS v6</title>
 
 <style>
 :root {
-  --accent: #007aff;
-  --accent-dark: #0056b3;
+  --accent: #4caf50;
+  --accent-dark: #388e3c;
   --bg: #f5f6fa;
   --white: #fff;
   --gray: #ddd;
@@ -30,6 +26,7 @@ html, body {
   display:flex;align-items:center;justify-content:space-between;
   padding:0 1rem;z-index:1000;
 }
+.pos-header h1{margin:0;font-size:1.1rem;}
 .pos-tabs {
   position:fixed;top:55px;left:0;right:0;
   background:#fff;border-bottom:1px solid var(--gray);
@@ -53,14 +50,27 @@ html, body {
 .table th{background:var(--accent);color:#fff;}
 .item-card{display:flex;justify-content:space-between;background:#fff;margin-bottom:6px;padding:10px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;}
 .item-card:hover{background:#f2f2f7;}
-.ticket-panel{background:#fff;border-radius:8px;margin-top:10px;padding:10px;}
+.ticket-panel{background:#fff;border-radius:8px;margin-bottom:10px;padding:10px;position:sticky;top:0;z-index:998;}
 .ticket-item{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;}
 .ticket-summary{display:flex;justify-content:space-between;margin-top:5px;font-weight:bold;}
-.checkout-btn{width:100%;background:var(--accent);color:#fff;padding:10px;border:none;border-radius:6px;cursor:pointer;margin-top:10px;}
+.checkout-footer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--white); border-top: 1px solid var(--gray);
+  padding: 10px; text-align: center; z-index: 1001;
+}
+.checkout-btn{width:100%;background:var(--accent);color:#fff;padding:10px;border:none;border-radius:6px;cursor:pointer;}
 .checkout-btn:hover{background:var(--accent-dark);}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:2000;}
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: #333; color: #fff; padding: 10px 20px; border-radius: 20px;
+  opacity: 0; transition: opacity 0.3s; z-index: 2000;
+}
+.toast.show {opacity: 0.9;}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:3000;}
 .modal.active{display:flex;}
 .modal-content{background:#fff;padding:1rem;border-radius:6px;width:90%;max-width:400px;}
+.modal-header{font-weight:bold;margin-bottom:10px;}
+.barcode-btn {background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer;}
 </style>
 </head>
 
@@ -70,7 +80,7 @@ html, body {
 <div id="app" style="display:none">
   <header class="pos-header">
     <h1>SmartPOS</h1>
-    <button id="btn-settings">⚙️</button>
+    <button class="barcode-btn" id="btn-scan">🔍</button>
   </header>
 
   <nav class="pos-tabs">
@@ -83,10 +93,13 @@ html, body {
   <main id="tab-content"></main>
 </div>
 
-<!-- Receipt Detail Modal -->
-<div class="modal" id="receiptModal">
+<div class="checkout-footer" id="footer">
+  <button class="checkout-btn" onclick="checkout()">CHARGE</button>
+</div>
+
+<div class="modal" id="modal-receipt">
   <div class="modal-content">
-    <h3 id="receiptTitle">Receipt Detail</h3>
+    <div class="modal-header" id="receiptTitle"></div>
     <div id="receiptItems"></div>
     <div style="margin-top:10px;font-weight:bold;">
       Total: <span id="receiptTotal"></span>
@@ -97,28 +110,28 @@ html, body {
   </div>
 </div>
 
-<script>
-let appData = { items: [], categories: [], receipts: [] };
-let ticket = [];
+<div class="toast" id="toast"></div>
 
-/* INIT */
-document.addEventListener("DOMContentLoaded", () => {
+<script>
+let appData={items:[],categories:[],receipts:[]};
+let ticket=[];
+
+document.addEventListener("DOMContentLoaded",()=>{
   document.querySelector(".loader").style.display="none";
   document.querySelector("#app").style.display="block";
-  loadLocal();
-  initTabs();
-  renderSales();
+  loadLocal();initTabs();renderSales();
 });
 
-/* Storage */
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2000);
+}
 function saveLocal(){localStorage.setItem("smartpos-data",JSON.stringify(appData));}
 function loadLocal(){const raw=localStorage.getItem("smartpos-data");if(raw)appData=JSON.parse(raw);}
-
-/* Tabs */
 function initTabs(){
-  const tabs=document.querySelectorAll(".pos-tabs button");
-  tabs.forEach(b=>b.onclick=()=>{
-    tabs.forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".pos-tabs button").forEach(b=>b.onclick=()=>{
+    document.querySelectorAll(".pos-tabs button").forEach(x=>x.classList.remove("active"));
     b.classList.add("active");
     const t=b.dataset.tab;
     if(t==="sales")renderSales();
@@ -128,141 +141,121 @@ function initTabs(){
   });
 }
 
-/* SALES TAB */
+/* SALES */
 function renderSales(){
-  const main=document.querySelector("#tab-content");
-  let html=`<h2>Sales</h2><div id='salesList'>`;
+  const main=document.getElementById("tab-content");
+  let html=`<div class='ticket-panel' id='ticketPanel'></div>`;
+  html+=`<div id='salesList'>`;
   appData.items.forEach(it=>{
-    html+=`<div class='item-card' onclick="addToTicket('${it.id}')"><span>${it.name}</span><span>Ks ${it.price}</span></div>`;
+    html+=`<div class='item-card' onclick="addToTicket('${it.id}')">
+      <span>${it.name}</span><span>Ks ${it.price}</span></div>`;
   });
-  html+=`</div><div class='ticket-panel' id='ticketPanel'></div>`;
-  main.innerHTML=html;
-  renderTicket();
+  html+=`</div>`;
+  main.innerHTML=html;renderTicket();
 }
 function addToTicket(id){
-  const item=appData.items.find(i=>i.id==id);
-  if(!item)return;
+  const item=appData.items.find(i=>i.id==id);if(!item)return;
   const ex=ticket.find(t=>t.id==id);
-  if(ex)ex.qty++;else ticket.push({...item,qty:1});
-  renderTicket();
+  if(ex)ex.qty++; else ticket.push({...item,qty:1});
+  renderTicket();toast("Added to sale");
 }
 function renderTicket(){
   const panel=document.getElementById("ticketPanel");
-  let total=0, html="";
+  let total=0,html="";
   ticket.forEach(t=>{
-    const line=t.qty*t.price;
-    total+=line;
-    html+=`<div class='ticket-item' ontouchstart='swipeStart(event)' ontouchend='swipeEnd(event,"${t.id}")' onclick='addQty("${t.id}")'><span>${t.name} × <span class='qty'>${t.qty}</span></span><span>Ks ${line}</span></div>`;
+    const line=t.qty*t.price;total+=line;
+    html+=`<div class='ticket-item'>
+      <span>${t.name} × ${t.qty}</span>
+      <span>Ks ${line} <button class='btn' style='padding:2px 6px' onclick='removeItem("${t.id}")'>🗑</button></span>
+    </div>`;
   });
-  html+=`<div class='ticket-summary'><span>Total</span><span class='ticket-total'>Ks ${total}</span></div>
-  <button class='checkout-btn' onclick='checkout()'>Charge</button>`;
+  html+=`<div class='ticket-summary'><span>Total</span><span>Ks ${total}</span></div>`;
   panel.innerHTML=html;
 }
-
-/* Swipe & Tap Qty */
-let touchX;
-function swipeStart(e){touchX=e.touches[0].clientX;}
-function swipeEnd(e,id){const dx=e.changedTouches[0].clientX-touchX;if(dx<-60){if(confirm("Delete item?")){ticket=ticket.filter(x=>x.id!=id);renderTicket();}}}
-function addQty(id){const it=ticket.find(x=>x.id==id);if(it){it.qty++;renderTicket();}}
-
-/* Checkout */
+function removeItem(id){ticket=ticket.filter(x=>x.id!=id);renderTicket();toast("Deleted");}
 function checkout(){
-  if(ticket.length==0)return;
+  if(ticket.length==0){toast("No items");return;}
   const total=ticket.reduce((s,i)=>s+i.qty*i.price,0);
-  if(!confirm(`Confirm charge Ks ${total}?`))return;
-  const receipt={id:Date.now(),date:new Date().toLocaleString(),items:[...ticket],total};
-  appData.receipts.push(receipt);
-  ticket=[]; renderTicket(); saveLocal();
-  alert("✅ Sale Completed!");
+  if(confirm(`Confirm charge Ks ${total}?`)){
+    const receipt={id:Date.now(),date:new Date().toLocaleString(),items:[...ticket],total};
+    appData.receipts.push(receipt);ticket=[];renderTicket();saveLocal();
+    renderReceipts();toast("✅ Sale completed");
+  }
 }
 
-/* ITEMS TAB */
+/* ITEMS */
 function renderItems(){
-  const main=document.querySelector("#tab-content");
-  let html=`<h2>Items</h2>
-  <button class='btn' onclick='addItem()'>+ Add Item</button>
+  const main=document.getElementById("tab-content");
+  let html=`<button class='btn' onclick='addItem()'>+ Add Item</button>
   <table class='table'><tr><th>Name</th><th>Price</th><th>Category</th><th>Action</th></tr>`;
   appData.items.forEach(i=>{
     html+=`<tr><td>${i.name}</td><td>${i.price}</td><td>${i.category||""}</td>
     <td><button class='btn' onclick='editItem("${i.id}")'>Edit</button>
     <button class='btn' onclick='deleteItem("${i.id}")'>Del</button></td></tr>`;
   });
-  html+="</table>";
-  main.innerHTML=html;
+  html+="</table>";main.innerHTML=html;
 }
 function addItem(){
-  const name=prompt("Item name?"); if(!name)return;
+  const name=prompt("Item name?");if(!name)return;
   const price=parseFloat(prompt("Price?")||0);
   const cat=prompt("Category?");
   appData.items.push({id:Date.now().toString(),name,price,category:cat});
-  saveLocal(); renderItems();
+  saveLocal();renderItems();toast("Item added");
 }
 function editItem(id){
-  const it=appData.items.find(x=>x.id==id);
-  if(!it)return;
+  const it=appData.items.find(x=>x.id==id);if(!it)return;
   it.name=prompt("Name:",it.name)||it.name;
   it.price=parseFloat(prompt("Price:",it.price)||it.price);
   it.category=prompt("Category:",it.category||"")||it.category;
-  saveLocal(); renderItems();
+  saveLocal();renderItems();toast("Item updated");
 }
-function deleteItem(id){
-  if(confirm("Delete item?")){
-    appData.items=appData.items.filter(x=>x.id!=id);
-    saveLocal(); renderItems();
-  }
-}
+function deleteItem(id){if(confirm("Delete item?")){appData.items=appData.items.filter(x=>x.id!=id);saveLocal();renderItems();toast("Item deleted");}}
 
-/* CATEGORIES TAB */
+/* CATEGORIES */
 function renderCategories(){
-  const main=document.querySelector("#tab-content");
-  let html=`<h2>Categories</h2>
-  <button class='btn' onclick='addCategory()'>+ Add Category</button>
+  const main=document.getElementById("tab-content");
+  let html=`<button class='btn' onclick='addCategory()'>+ Add Category</button>
   <table class='table'><tr><th>Name</th></tr>`;
   appData.categories.forEach(c=>{
     html+=`<tr onclick='filterByCategory("${c.name}")'><td>${c.name}</td></tr>`;
   });
-  html+="</table>";
-  main.innerHTML=html;
+  html+="</table>";main.innerHTML=html;
 }
 function addCategory(){
-  const name=prompt("Category name?");
-  if(!name)return;
-  appData.categories.push({id:Date.now(),name});
-  saveLocal(); renderCategories();
+  const name=prompt("Category name?");if(!name)return;
+  appData.categories.push({id:Date.now(),name});saveLocal();renderCategories();toast("Category added");
 }
 function filterByCategory(cat){
-  const tab=document.querySelector('[data-tab="sales"]');
-  tab.click();
-  const list=document.getElementById("salesList");
-  list.querySelectorAll(".item-card").forEach(div=>{
+  document.querySelector('[data-tab="sales"]').click();
+  document.getElementById("salesList").querySelectorAll(".item-card").forEach(div=>{
     div.style.display=div.textContent.includes(cat)?"flex":"none";
   });
+  toast("Filter: "+cat);
 }
 
-/* RECEIPTS TAB */
+/* RECEIPTS */
 function renderReceipts(){
-  const main=document.querySelector("#tab-content");
-  let html="<h2>Receipts</h2><table class='table'><tr><th>Date</th><th>Total</th></tr>";
+  const main=document.getElementById("tab-content");
+  let html="<table class='table'><tr><th>Date</th><th>Total</th></tr>";
   appData.receipts.forEach(r=>{
     html+=`<tr onclick='showReceipt(${r.id})'><td>${r.date}</td><td>Ks ${r.total}</td></tr>`;
   });
-  html+="</table>";
-  main.innerHTML=html;
+  html+="</table>";main.innerHTML=html;
 }
 function showReceipt(id){
-  const r=appData.receipts.find(x=>x.id==id);
-  if(!r)return;
-  document.getElementById("receiptTitle").textContent=`Invoice #${r.id}`;
-  document.getElementById("receiptItems").innerHTML=r.items.map(i=>
-    `<div style='display:flex;justify-content:space-between;'>
-      <span>${i.name} × ${i.qty}</span>
-      <span>Ks ${(i.qty*i.price).toLocaleString()}</span>
-     </div>`).join("");
+  const r=appData.receipts.find(x=>x.id==id);if(!r)return;
+  document.getElementById("receiptTitle").textContent=`Invoice #${r.id} (${r.date})`;
+  document.getElementById("receiptItems").innerHTML=r.items.map(i=>`<div style='display:flex;justify-content:space-between;'>
+    <span>${i.name} × ${i.qty}</span><span>Ks ${(i.qty*i.price).toLocaleString()}</span></div>`).join("");
   document.getElementById("receiptTotal").textContent="Ks "+r.total;
-  document.getElementById("receiptModal").classList.add("active");
+  document.getElementById("modal-receipt").classList.add("active");
 }
-function closeReceipt(){document.getElementById("receiptModal").classList.remove("active");}
+function closeReceipt(){document.getElementById("modal-receipt").classList.remove("active");}
+
+/* BARCODE */
+document.getElementById("btn-scan").onclick=()=>{
+  toast("🔍 Scanner not active (demo placeholder)");
+};
 </script>
 </body>
 </html>
-
