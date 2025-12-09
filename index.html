@@ -3,16 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SmartPOS v6</title>
+<title>SmartPOS v7</title>
 
 <style>
 :root {
   --accent: #4caf50;
-  --accent-dark: #388e3c;
-  --bg: #f5f6fa;
-  --white: #fff;
-  --gray: #ddd;
+  --accent-dark: #2e7d32;
+  --bg: #f8f9fa;
   --text: #333;
+  --white: #fff;
 }
 html, body {
   margin: 0; padding: 0; height: 100%;
@@ -20,57 +19,70 @@ html, body {
   background: var(--bg); color: var(--text);
 }
 .loader {display:flex;align-items:center;justify-content:center;height:100vh;}
-.pos-header {
-  position:fixed;top:0;left:0;right:0;height:55px;
-  background:var(--accent);color:#fff;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 1rem;z-index:1000;
+header {
+  background: var(--accent); color: white;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 55px; padding: 0 1rem; position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
 }
-.pos-header h1{margin:0;font-size:1.1rem;}
-.pos-tabs {
-  position:fixed;top:55px;left:0;right:0;
-  background:#fff;border-bottom:1px solid var(--gray);
-  display:flex;z-index:999;
+header h1 {font-size: 1.1rem; margin: 0;}
+.barcode-btn {background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;}
+nav {
+  position: fixed; top: 55px; left: 0; right: 0;
+  background: #fff; display: flex; border-bottom: 1px solid #ddd; z-index: 999;
 }
-.pos-tabs button {
+nav button {
   flex:1;padding:0.75rem;border:none;background:none;cursor:pointer;font-size:1rem;
 }
-.pos-tabs button.active {
+nav button.active {
   border-bottom:3px solid var(--accent);color:var(--accent);font-weight:bold;
 }
-#tab-content {
-  margin-top:110px;padding:1rem;height:calc(100vh - 110px);overflow-y:auto;
+main {
+  margin-top:110px; height: calc(100vh - 120px);
+  overflow-y: auto; padding: 1rem;
 }
-.btn {
-  background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:5px;cursor:pointer;
+.ticket-panel {
+  background: white; border-radius: 8px; padding: 10px; margin-bottom: 10px; position: sticky; top: 0; z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.btn:hover {background:var(--accent-dark);}
-.table {width:100%;border-collapse:collapse;margin-top:10px;}
-.table th,.table td{border:1px solid #ddd;padding:6px;}
-.table th{background:var(--accent);color:#fff;}
-.item-card{display:flex;justify-content:space-between;background:#fff;margin-bottom:6px;padding:10px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;}
+.ticket-item {display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:4px 0;}
+.ticket-summary {display:flex;justify-content:space-between;font-weight:bold;margin-top:5px;}
+.item-card {
+  display:flex;justify-content:space-between;background:white;
+  border-radius:6px;padding:10px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;
+}
 .item-card:hover{background:#f2f2f7;}
-.ticket-panel{background:#fff;border-radius:8px;margin-bottom:10px;padding:10px;position:sticky;top:0;z-index:998;}
-.ticket-item{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;}
-.ticket-summary{display:flex;justify-content:space-between;margin-top:5px;font-weight:bold;}
 .checkout-footer {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--white); border-top: 1px solid var(--gray);
-  padding: 10px; text-align: center; z-index: 1001;
+  position: fixed; bottom: 0; left: 0; right: 0; background: #fff;
+  border-top: 1px solid #ddd; padding: 10px; z-index: 1001;
 }
-.checkout-btn{width:100%;background:var(--accent);color:#fff;padding:10px;border:none;border-radius:6px;cursor:pointer;}
-.checkout-btn:hover{background:var(--accent-dark);}
+.checkout-btn {
+  width:100%; background: var(--accent); color: white;
+  border: none; border-radius: 6px; padding: 10px; font-size: 1rem; cursor: pointer;
+}
+.checkout-btn:hover {background: var(--accent-dark);}
+.btn {
+  background: var(--accent); color: #fff; border: none; border-radius: 4px;
+  padding: 6px 10px; cursor: pointer;
+}
+.btn:hover {background: var(--accent-dark);}
+.table {width:100%;border-collapse:collapse;margin-top:10px;}
+.table th, .table td {border:1px solid #ddd;padding:8px;}
+.table th {background:var(--accent);color:white;}
 .toast {
-  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-  background: #333; color: #fff; padding: 10px 20px; border-radius: 20px;
-  opacity: 0; transition: opacity 0.3s; z-index: 2000;
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,0.8);color:white;padding:10px 20px;border-radius:20px;
+  opacity:0;transition:opacity .3s;z-index:3000;
 }
-.toast.show {opacity: 0.9;}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:3000;}
-.modal.active{display:flex;}
-.modal-content{background:#fff;padding:1rem;border-radius:6px;width:90%;max-width:400px;}
-.modal-header{font-weight:bold;margin-bottom:10px;}
-.barcode-btn {background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer;}
+.toast.show {opacity:0.9;}
+.modal {
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:2000;
+}
+.modal.active {display:flex;}
+.modal-content {
+  background:white;border-radius:8px;padding:1rem;width:90%;max-width:400px;
+}
+.modal-header {font-weight:bold;margin-bottom:10px;}
 </style>
 </head>
 
@@ -78,12 +90,12 @@ html, body {
 <div class="loader"><h2>SmartPOS Loading...</h2></div>
 
 <div id="app" style="display:none">
-  <header class="pos-header">
+  <header>
     <h1>SmartPOS</h1>
     <button class="barcode-btn" id="btn-scan">🔍</button>
   </header>
 
-  <nav class="pos-tabs">
+  <nav>
     <button data-tab="sales" class="active">Sales</button>
     <button data-tab="items">Items</button>
     <button data-tab="categories">Categories</button>
@@ -93,45 +105,42 @@ html, body {
   <main id="tab-content"></main>
 </div>
 
-<div class="checkout-footer" id="footer">
-  <button class="checkout-btn" onclick="checkout()">CHARGE</button>
-</div>
+<div class="checkout-footer"><button class="checkout-btn" onclick="checkout()">CHARGE</button></div>
+<div class="toast" id="toast"></div>
 
+<!-- Receipt Modal -->
 <div class="modal" id="modal-receipt">
   <div class="modal-content">
-    <div class="modal-header" id="receiptTitle"></div>
+    <div class="modal-header" id="receiptTitle">Receipt</div>
     <div id="receiptItems"></div>
-    <div style="margin-top:10px;font-weight:bold;">
-      Total: <span id="receiptTotal"></span>
-    </div>
-    <div style="text-align:right;margin-top:15px;">
+    <div style="margin-top:10px;font-weight:bold;">Total: <span id="receiptTotal"></span></div>
+    <div style="margin-top:15px;text-align:right;">
+      <button class="btn" onclick="saveReceiptJPG()">Save JPG</button>
       <button class="btn" onclick="closeReceipt()">Close</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
 <script>
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxOVeoQXw18YLYbsK-6gqrIsPs3uqiZO-wQ8llEt7XL4tdgKB7DLJq_lotimJ8YnzY/exec";
 let appData={items:[],categories:[],receipts:[]};
 let ticket=[];
 
 document.addEventListener("DOMContentLoaded",()=>{
   document.querySelector(".loader").style.display="none";
   document.querySelector("#app").style.display="block";
-  loadLocal();initTabs();renderSales();
+  initTabs();loadLocal();renderSales();
 });
-
 function toast(msg){
   const t=document.getElementById("toast");
-  t.textContent=msg; t.classList.add("show");
+  t.textContent=msg;t.classList.add("show");
   setTimeout(()=>t.classList.remove("show"),2000);
 }
 function saveLocal(){localStorage.setItem("smartpos-data",JSON.stringify(appData));}
 function loadLocal(){const raw=localStorage.getItem("smartpos-data");if(raw)appData=JSON.parse(raw);}
 function initTabs(){
-  document.querySelectorAll(".pos-tabs button").forEach(b=>b.onclick=()=>{
-    document.querySelectorAll(".pos-tabs button").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+    document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
     b.classList.add("active");
     const t=b.dataset.tab;
     if(t==="sales")renderSales();
@@ -140,8 +149,7 @@ function initTabs(){
     if(t==="receipts")renderReceipts();
   });
 }
-
-/* SALES */
+/* ---------- SALES TAB ---------- */
 function renderSales(){
   const main=document.getElementById("tab-content");
   let html=`<div class='ticket-panel' id='ticketPanel'></div>`;
@@ -150,20 +158,19 @@ function renderSales(){
     html+=`<div class='item-card' onclick="addToTicket('${it.id}')">
       <span>${it.name}</span><span>Ks ${it.price}</span></div>`;
   });
-  html+=`</div>`;
-  main.innerHTML=html;renderTicket();
+  html+=`</div>`; main.innerHTML=html; renderTicket();
 }
 function addToTicket(id){
-  const item=appData.items.find(i=>i.id==id);if(!item)return;
+  const item=appData.items.find(i=>i.id==id); if(!item) return;
   const ex=ticket.find(t=>t.id==id);
-  if(ex)ex.qty++; else ticket.push({...item,qty:1});
-  renderTicket();toast("Added to sale");
+  if(ex) ex.qty++; else ticket.push({...item,qty:1});
+  renderTicket(); toast("Added to sale");
 }
 function renderTicket(){
   const panel=document.getElementById("ticketPanel");
-  let total=0,html="";
+  let total=0, html="";
   ticket.forEach(t=>{
-    const line=t.qty*t.price;total+=line;
+    const line=t.qty*t.price; total+=line;
     html+=`<div class='ticket-item'>
       <span>${t.name} × ${t.qty}</span>
       <span>Ks ${line} <button class='btn' style='padding:2px 6px' onclick='removeItem("${t.id}")'>🗑</button></span>
@@ -178,40 +185,47 @@ function checkout(){
   const total=ticket.reduce((s,i)=>s+i.qty*i.price,0);
   if(confirm(`Confirm charge Ks ${total}?`)){
     const receipt={id:Date.now(),date:new Date().toLocaleString(),items:[...ticket],total};
-    appData.receipts.push(receipt);ticket=[];renderTicket();saveLocal();
-    renderReceipts();toast("✅ Sale completed");
+    appData.receipts.push(receipt);
+    ticket=[]; renderTicket(); saveLocal();
+    renderReceipts(); toast("✅ Sale completed");
   }
 }
 
-/* ITEMS */
+/* ---------- ITEMS TAB ---------- */
 function renderItems(){
   const main=document.getElementById("tab-content");
   let html=`<button class='btn' onclick='addItem()'>+ Add Item</button>
+  <button class='btn' onclick='startScanner("item")'>Scan Barcode</button>
   <table class='table'><tr><th>Name</th><th>Price</th><th>Category</th><th>Action</th></tr>`;
   appData.items.forEach(i=>{
     html+=`<tr><td>${i.name}</td><td>${i.price}</td><td>${i.category||""}</td>
     <td><button class='btn' onclick='editItem("${i.id}")'>Edit</button>
     <button class='btn' onclick='deleteItem("${i.id}")'>Del</button></td></tr>`;
   });
-  html+="</table>";main.innerHTML=html;
+  html+="</table>"; main.innerHTML=html;
 }
 function addItem(){
-  const name=prompt("Item name?");if(!name)return;
+  const name=prompt("Item name?"); if(!name)return;
   const price=parseFloat(prompt("Price?")||0);
   const cat=prompt("Category?");
   appData.items.push({id:Date.now().toString(),name,price,category:cat});
-  saveLocal();renderItems();toast("Item added");
+  saveLocal(); renderItems(); toast("Item added");
 }
 function editItem(id){
-  const it=appData.items.find(x=>x.id==id);if(!it)return;
+  const it=appData.items.find(x=>x.id==id); if(!it)return;
   it.name=prompt("Name:",it.name)||it.name;
   it.price=parseFloat(prompt("Price:",it.price)||it.price);
   it.category=prompt("Category:",it.category||"")||it.category;
-  saveLocal();renderItems();toast("Item updated");
+  saveLocal(); renderItems(); toast("Item updated");
 }
-function deleteItem(id){if(confirm("Delete item?")){appData.items=appData.items.filter(x=>x.id!=id);saveLocal();renderItems();toast("Item deleted");}}
+function deleteItem(id){
+  if(confirm("Delete item?")){
+    appData.items=appData.items.filter(x=>x.id!=id);
+    saveLocal(); renderItems(); toast("Item deleted");
+  }
+}
 
-/* CATEGORIES */
+/* ---------- CATEGORIES ---------- */
 function renderCategories(){
   const main=document.getElementById("tab-content");
   let html=`<button class='btn' onclick='addCategory()'>+ Add Category</button>
@@ -219,11 +233,12 @@ function renderCategories(){
   appData.categories.forEach(c=>{
     html+=`<tr onclick='filterByCategory("${c.name}")'><td>${c.name}</td></tr>`;
   });
-  html+="</table>";main.innerHTML=html;
+  html+="</table>"; main.innerHTML=html;
 }
 function addCategory(){
-  const name=prompt("Category name?");if(!name)return;
-  appData.categories.push({id:Date.now(),name});saveLocal();renderCategories();toast("Category added");
+  const name=prompt("Category name?"); if(!name)return;
+  appData.categories.push({id:Date.now(),name});
+  saveLocal(); renderCategories(); toast("Category added");
 }
 function filterByCategory(cat){
   document.querySelector('[data-tab="sales"]').click();
@@ -233,29 +248,68 @@ function filterByCategory(cat){
   toast("Filter: "+cat);
 }
 
-/* RECEIPTS */
+/* ---------- RECEIPTS ---------- */
 function renderReceipts(){
   const main=document.getElementById("tab-content");
   let html="<table class='table'><tr><th>Date</th><th>Total</th></tr>";
   appData.receipts.forEach(r=>{
     html+=`<tr onclick='showReceipt(${r.id})'><td>${r.date}</td><td>Ks ${r.total}</td></tr>`;
   });
-  html+="</table>";main.innerHTML=html;
+  html+="</table>"; main.innerHTML=html;
 }
 function showReceipt(id){
-  const r=appData.receipts.find(x=>x.id==id);if(!r)return;
+  const r=appData.receipts.find(x=>x.id==id); if(!r)return;
   document.getElementById("receiptTitle").textContent=`Invoice #${r.id} (${r.date})`;
   document.getElementById("receiptItems").innerHTML=r.items.map(i=>`<div style='display:flex;justify-content:space-between;'>
-    <span>${i.name} × ${i.qty}</span><span>Ks ${(i.qty*i.price).toLocaleString()}</span></div>`).join("");
+    <span>${i.name} × ${i.qty}</span>
+    <span>Ks ${(i.qty*i.price).toLocaleString()}</span></div>`).join("");
   document.getElementById("receiptTotal").textContent="Ks "+r.total;
   document.getElementById("modal-receipt").classList.add("active");
 }
 function closeReceipt(){document.getElementById("modal-receipt").classList.remove("active");}
 
-/* BARCODE */
-document.getElementById("btn-scan").onclick=()=>{
-  toast("🔍 Scanner not active (demo placeholder)");
-};
+/* ---------- SAVE RECEIPT AS JPG ---------- */
+async function saveReceiptJPG(){
+  const el=document.querySelector("#modal-receipt .modal-content");
+  const canvas=await html2canvas(el);
+  const link=document.createElement("a");
+  link.download="receipt_"+Date.now()+".jpg";
+  link.href=canvas.toDataURL("image/jpeg");
+  link.click();
+}
+
+/* ---------- BARCODE SCANNER (OFFLINE EMBED) ---------- */
+function startScanner(mode="sales"){
+  toast("Starting scanner...");
+  // basic camera API fallback (offline simple version)
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+  .then(stream=>{
+    const video=document.createElement("video");
+    video.srcObject=stream;
+    video.setAttribute("playsinline",true);
+    video.play();
+    const modal=document.createElement("div");
+    modal.className="modal active";
+    modal.innerHTML=`<div class='modal-content'>
+      <h3>Scan Barcode</h3>
+      <video id='scannerVideo' style='width:100%'></video>
+      <div style='margin-top:10px;text-align:right;'><button class='btn' id='closeScan'>Close</button></div>
+    </div>`;
+    document.body.appendChild(modal);
+    document.getElementById("closeScan").onclick=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      modal.remove(); toast("Scanner closed");
+    };
+    const vid=document.getElementById("scannerVideo");
+    vid.srcObject=stream; vid.play();
+    toast("📸 Simulated scan ready (offline demo)");
+  })
+  .catch(()=>toast("Camera not available"));
+}
+document.getElementById("btn-scan").onclick=()=>startScanner("sales");
+
+/* ---------- HTML2CANVAS EMBED ---------- */
+!function(t,e){var n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t};"object"===("undefined"==typeof exports?"undefined":n(exports))&&"undefined"!=typeof module?e(exports):"function"==typeof define&&define.amd?define(["exports"],e):e(t.html2canvas={})}(this,function(t){t.html2canvas=function(){return new Promise((t=>{setTimeout(()=>{alert("Offline html2canvas placeholder – Replace with full library if needed.");t(document.createElement("canvas"));},100)}))}}); // placeholder mini
 </script>
 </body>
 </html>
